@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Research Agent</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .app {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+    }
+
+    .app.split {
+      grid-template-columns: 380px 1fr;
+    }
+
+    /* ── Left Panel ── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #2a2d3e;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #2a2d3e;
+    }
+
+    .panel-header h1 {
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .panel-header p {
+      font-size: 0.78rem;
+      color: #666;
+    }
+
+    /* ── Input Phase ── */
+    .input-phase {
+      padding: 20px 24px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .field { margin-bottom: 16px; }
+
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      background: #1a1d27;
+      border: 1px solid #2a2d3e;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e0e0e0;
+      font-size: 0.88rem;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus,
+    .field textarea:focus { border-color: #6c63ff; }
+
+    .field textarea { min-height: 80px; line-height: 1.5; }
+
+    .field .hint {
+      font-size: 0.72rem;
+      color: #555;
+      margin-top: 4px;
+    }
+
+    .upload-area {
+      border: 1px dashed #2a2d3e;
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .upload-area:hover { border-color: #6c63ff; }
+    .upload-area input { display: none; }
+    .upload-area label { color: #6c63ff; font-size: 0.85rem; cursor: pointer; }
+    .upload-area .file-name { color: #555; font-size: 0.75rem; margin-top: 4px; }
+
+    .btn-primary {
+      width: 100%;
+      background: #6c63ff;
+      color: #fff;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover { background: #574fd6; }
+    .btn-primary:disabled { background: #2a2d3e; color: #555; cursor: not-allowed; }
+
+    /* ── Chat Phase ── */
+    .chat-phase {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      max-width: 92%;
+      white-space: pre-wrap;
+    }
+
+    .msg.user {
+      background: #6c63ff22;
+      border: 1px solid #6c63ff44;
+      align-self: flex-end;
+      color: #c4c0ff;
+    }
+
+    .msg.agent {
+      background: #1a1d27;
+      border: 1px solid #2a2d3e;
+      align-self: flex-start;
+      color: #e0e0e0;
+    }
+
+    .msg.status {
+      background: transparent;
+      border: none;
+      color: #facc15;
+      font-style: italic;
+      font-size: 0.8rem;
+      align-self: flex-start;
+    }
+
+    .msg.error {
+      background: #f8717111;
+      border: 1px solid #f8717133;
+      color: #f87171;
+      align-self: flex-start;
+    }
+
+    .chat-input-row {
+      padding: 12px 24px 16px;
+      border-top: 1px solid #2a2d3e;
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+      background: #1a1d27;
+      border: 1px solid #2a2d3e;
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #e0e0e0;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input-row input:focus { border-color: #6c63ff; }
+    .chat-input-row input:disabled { opacity: 0.4; }
+
+    .btn-send {
+      background: #6c63ff;
+      color: #fff;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: background 0.2s;
+    }
+
+    .btn-send:hover { background: #574fd6; }
+    .btn-send:disabled { background: #2a2d3e; cursor: not-allowed; }
+
+    /* ── Progress ── */
+    .progress-list {
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .progress-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: #888;
+    }
+
+    .progress-item.done { color: #4ade80; }
+    .progress-item.active { color: #facc15; }
+    .progress-item .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #333;
+      flex-shrink: 0;
+    }
+    .progress-item.done .dot { background: #4ade80; }
+    .progress-item.active .dot { background: #facc15; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Version history ── */
+    .version-history {
+      padding: 12px 24px;
+      border-top: 1px solid #2a2d3e;
+    }
+
+    .version-history h3 {
+      font-size: 0.72rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .version-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .version-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      background: #1a1d27;
+      border: 1px solid #2a2d3e;
+      border-radius: 6px;
+      font-size: 0.78rem;
+    }
+
+    .version-item span { color: #aaa; }
+
+    .btn-download {
+      background: transparent;
+      border: 1px solid #6c63ff;
+      color: #6c63ff;
+      padding: 3px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover { background: #6c63ff22; }
+
+    /* ── Right Panel — Report Preview ── */
+    .right-panel {
+      height: 100vh;
+      overflow-y: auto;
+      padding: 40px 48px;
+      background: #13151f;
+    }
+
+    .report-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .report-empty .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* ── Report content styles ── */
+    .report-preview h1 {
+      font-size: 1.8rem;
+      color: #fff;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .report-meta {
+      font-size: 0.78rem;
+      color: #666;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #6c63ff;
+    }
+
+    .report-section { margin-bottom: 32px; }
+
+    .report-section h2 {
+      font-size: 1.1rem;
+      color: #6c63ff;
+      margin-bottom: 12px;
+      padding-bottom: 4px;
+    }
+
+    .report-section p {
+      font-size: 0.9rem;
+      line-height: 1.75;
+      color: #ccc;
+      margin-bottom: 10px;
+    }
+
+    .report-highlights {
+      margin: 12px 0;
+      padding: 12px 16px;
+      background: #1a1d27;
+      border-left: 3px solid #6c63ff;
+      border-radius: 4px;
+    }
+
+    .report-highlights li {
+      font-size: 0.82rem;
+      color: #bbb;
+      line-height: 1.6;
+      margin-left: 16px;
+      margin-bottom: 4px;
+    }
+
+    .report-sources {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid #2a2d3e;
+    }
+
+    .report-sources h2 {
+      font-size: 0.85rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .report-sources ol {
+      padding-left: 20px;
+    }
+
+    .report-sources li {
+      font-size: 0.78rem;
+      color: #666;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .report-sources a {
+      color: #6c63ff;
+      text-decoration: none;
+    }
+
+    .report-sources a:hover { text-decoration: underline; }
+
+    /* ── Hidden ── */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <h1>🔍 Research Agent</h1>
+      <p>Multi-agent research with web search, document analysis, and AI synthesis</p>
+    </div>
+
+    <!-- INPUT PHASE -->
+    <div class="input-phase" id="inputPhase">
+      <div class="field">
+        <label>Research Topic</label>
+        <input type="text" id="topicInput" placeholder="e.g. Impact of LLMs on software engineering jobs"/>
+      </div>
+
+      <div class="field">
+        <label>Custom Instructions <span style="color:#444">(optional)</span></label>
+        <textarea id="instructionsInput" placeholder="Leave blank and I'll ask you questions to customize your report..."></textarea>
+        <div class="hint">Specify focus area, region, depth, sections, tone, length, etc.</div>
+      </div>
+
+      <div class="field">
+        <label>Reference Document <span style="color:#444">(optional)</span></label>
+        <div class="upload-area">
+          <input type="file" id="fileInput" accept=".pdf"/>
+          <label for="fileInput">📎 Choose a PDF</label>
+          <div class="file-name" id="fileName">No file selected</div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="generateBtn">Generate Report</button>
+    </div>
+
+    <!-- CHAT PHASE -->
+    <div class="chat-phase hidden" id="chatPhase">
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <!-- Progress -->
+      <div class="progress-list hidden" id="progressList">
+        <div class="progress-item" id="prog-plan"><div class="dot"></div>Creating research plan</div>
+        <div class="progress-item" id="prog-web"><div class="dot"></div>Searching the web</div>
+        <div class="progress-item" id="prog-doc"><div class="dot"></div>Searching document</div>
+        <div class="progress-item" id="prog-analysis"><div class="dot"></div>Analysing findings</div>
+        <div class="progress-item" id="prog-report"><div class="dot"></div>Generating report</div>
+      </div>
+
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask for changes or refinements..." disabled/>
+        <button class="btn-send" id="chatSendBtn" disabled>Send</button>
+      </div>
+    </div>
+
+    <!-- VERSION HISTORY -->
+    <div class="version-history hidden" id="versionHistory">
+      <h3>Report Versions</h3>
+      <div class="version-list" id="versionList"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel hidden" id="rightPanel">
+    <div class="report-empty" id="reportEmpty">
+      <div class="icon">📄</div>
+      <div>Your report will appear here</div>
+    </div>
+    <div class="report-preview hidden" id="reportPreview"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let threadId       = crypto.randomUUID();
+  let collectionName = null;
+  let currentPhase   = 'input'; // input | clarifying | researching | done
+  let eventSource    = null;
+  let reportVersions = [];
+  let hasDocument    = false;
+
+  // ── Elements ───────────────────────────────────────────────────────────────
+  const app            = document.getElementById('app');
+  const inputPhase     = document.getElementById('inputPhase');
+  const chatPhase      = document.getElementById('chatPhase');
+  const chatMessages   = document.getElementById('chatMessages');
+  const progressList   = document.getElementById('progressList');
+  const chatInput      = document.getElementById('chatInput');
+  const chatSendBtn    = document.getElementById('chatSendBtn');
+  const versionHistory = document.getElementById('versionHistory');
+  const versionList    = document.getElementById('versionList');
+  const rightPanel     = document.getElementById('rightPanel');
+  const reportEmpty    = document.getElementById('reportEmpty');
+  const reportPreview  = document.getElementById('reportPreview');
+  const fileInput      = document.getElementById('fileInput');
+  const fileName       = document.getElementById('fileName');
+  const generateBtn    = document.getElementById('generateBtn');
+
+  // ── File selection ─────────────────────────────────────────────────────────
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) fileName.textContent = file.name;
+  });
+
+  // ── Generate button ────────────────────────────────────────────────────────
+  generateBtn.addEventListener('click', async () => {
+    const topic = document.getElementById('topicInput').value.trim();
+    if (!topic) { alert('Please enter a research topic.'); return; }
+
+    generateBtn.disabled = true;
+
+    // Upload document first if selected
+    if (fileInput.files[0]) {
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('thread_id', threadId);
+      try {
+        const r = await fetch('/upload', { method: 'POST', body: formData });
+        const d = await r.json();
+        collectionName = d.collection_name;
+        hasDocument = true;
+      } catch (e) {
+        console.error('Upload failed:', e);
+      }
+    }
+
+    // Switch to chat phase
+    switchToChat();
+
+    // Connect SSE
+    connectSSE();
+
+    // Start research
+    const instructions = document.getElementById('instructionsInput').value.trim();
+    await fetch('/research', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topic,
+        custom_instructions: instructions,
+        thread_id: threadId,
+        collection_name: collectionName
+      })
+    });
+  });
+
+  // ── Switch to chat view ────────────────────────────────────────────────────
+  function switchToChat() {
+    inputPhase.classList.add('hidden');
+    chatPhase.classList.remove('hidden');
+    app.classList.add('split');
+    rightPanel.classList.remove('hidden');
+    currentPhase = 'researching';
+  }
+
+  // ── SSE connection ─────────────────────────────────────────────────────────
+  function connectSSE() {
+    if (eventSource) eventSource.close();
+    eventSource = new EventSource(`/events/${threadId}`);
+
+    eventSource.addEventListener('started', () => {
+      progressList.classList.remove('hidden');
+    });
+
+    eventSource.addEventListener('plan_created', () => {
+      setProgress('prog-plan', 'done');
+      setProgress('prog-web', 'active');
+    });
+
+    eventSource.addEventListener('web_search_started', () => {
+      setProgress('prog-web', 'active');
+    });
+
+    eventSource.addEventListener('web_search_complete', () => {
+      setProgress('prog-web', 'done');
+      setProgress('prog-doc', hasDocument ? 'active' : 'done');
+    });
+
+    eventSource.addEventListener('document_search_started', () => {
+      setProgress('prog-doc', 'active');
+    });
+
+    eventSource.addEventListener('document_search_complete', () => {
+      setProgress('prog-doc', 'done');
+      setProgress('prog-analysis', 'active');
+    });
+
+    eventSource.addEventListener('analysis_started', () => {
+      setProgress('prog-analysis', 'active');
+    });
+
+    eventSource.addEventListener('analysis_complete', () => {
+      setProgress('prog-analysis', 'done');
+      setProgress('prog-report', 'active');
+    });
+
+    eventSource.addEventListener('clarification_needed', (e) => {
+      const data = JSON.parse(e.data);
+      progressList.classList.add('hidden');
+      appendMsg('agent', data.message);
+      enableChatInput('Answer the questions above, then I\'ll start researching...');
+      currentPhase = 'clarifying';
+    });
+
+    eventSource.addEventListener('report_ready', async (e) => {
+      const data = JSON.parse(e.data);
+      setProgress('prog-report', 'done');
+
+      // Load and render report
+      await renderReport(data.report_id, data.version, data.title);
+
+      // Add version to history
+      addVersion(data.report_id, data.version, data.title);
+
+      progressList.classList.add('hidden');
+      appendMsg('agent', `✅ Report ready — "${data.title}"\n\nWant changes? Describe them below and I'll update the report.`);
+      enableChatInput('Ask for changes or refinements...');
+      currentPhase = 'done';
+    });
+
+    eventSource.addEventListener('refinement_started', () => {
+      appendMsg('status', '🔄 Applying changes...');
+    });
+
+    eventSource.addEventListener('refinement_complete', () => {});
+
+    eventSource.addEventListener('error', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        appendMsg('error', `❌ ${data.message}`);
+      } catch {
+        appendMsg('error', '❌ Something went wrong.');
+      }
+      generateBtn.disabled = false;
+    });
+  }
+
+  // ── Chat send ──────────────────────────────────────────────────────────────
+  chatSendBtn.addEventListener('click', sendChatMessage);
+  chatInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendChatMessage();
+  });
+
+  async function sendChatMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    appendMsg('user', text);
+    chatInput.value = '';
+    disableChatInput();
+
+    if (currentPhase === 'clarifying') {
+      // Send clarification answer
+      progressList.classList.remove('hidden');
+      setProgress('prog-plan', 'active');
+      await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          thread_id: threadId,
+          collection_name: collectionName
+        })
+      });
+      currentPhase = 'researching';
+
+    } else if (currentPhase === 'done') {
+      // Send refinement request
+      await fetch('/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          refinement_request: text,
+          thread_id: threadId
+        })
+      });
+    }
+  }
+
+  // ── Render report ──────────────────────────────────────────────────────────
+  async function renderReport(reportId, version, title) {
+    const r = await fetch(`/report/${reportId}`);
+    const report = await r.json();
+
+    let html = `<h1>${escHtml(report.title || title)}</h1>`;
+    const meta = report.metadata || {};
+    html += `<div class="report-meta">Version ${meta.version || version}`;
+    if (meta.saved_at) html += ` &nbsp;·&nbsp; ${meta.saved_at.slice(0, 10)}`;
+    html += `</div>`;
+
+    (report.sections || []).forEach(section => {
+      html += `<div class="report-section">`;
+      html += `<h2>${escHtml(section.title)}</h2>`;
+
+      const paragraphs = (section.content || '').split('\n').filter(p => p.trim());
+      paragraphs.forEach(p => {
+        html += `<p>${escHtml(p)}</p>`;
+      });
+
+      if (section.highlights && section.highlights.length) {
+        html += `<div class="report-highlights"><ul>`;
+        section.highlights.forEach(h => {
+          html += `<li>${escHtml(h)}</li>`;
+        });
+        html += `</ul></div>`;
+      }
+      html += `</div>`;
+    });
+
+    const sources = report.sources || [];
+    if (sources.length) {
+      html += `<div class="report-sources"><h2>Sources</h2><ol>`;
+      sources.forEach(s => {
+        if (s.url) {
+          html += `<li><a href="${s.url}" target="_blank">${escHtml(s.title)}</a></li>`;
+        } else {
+          html += `<li>${escHtml(s.title)}</li>`;
+        }
+      });
+      html += `</ol></div>`;
+    }
+
+    reportPreview.innerHTML = html;
+    reportEmpty.classList.add('hidden');
+    reportPreview.classList.remove('hidden');
+  }
+
+  // ── Version history ────────────────────────────────────────────────────────
+  function addVersion(reportId, version, title) {
+    reportVersions.push({ reportId, version, title });
+    versionHistory.classList.remove('hidden');
+
+    const item = document.createElement('div');
+    item.className = 'version-item';
+    item.innerHTML = `
+      <span>v${version} — ${escHtml(title.slice(0, 30))}${title.length > 30 ? '…' : ''}</span>
+      <button class="btn-download" onclick="downloadPdf('${reportId}', ${version})">PDF</button>
+    `;
+    versionList.appendChild(item);
+  }
+
+  function downloadPdf(reportId, version) {
+    window.open(`/report/${reportId}/pdf`, '_blank');
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function appendMsg(role, text) {
+    const el = document.createElement('div');
+    el.className = `msg ${role}`;
+    el.textContent = text;
+    chatMessages.appendChild(el);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return el;
+  }
+
+  function setProgress(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = `progress-item ${state}`;
+  }
+
+  function enableChatInput(placeholder) {
+    chatInput.disabled = false;
+    chatSendBtn.disabled = false;
+    chatInput.placeholder = placeholder || 'Type a message...';
+    chatInput.focus();
+  }
+
+  function disableChatInput() {
+    chatInput.disabled = true;
+    chatSendBtn.disabled = true;
+  }
+
+  function escHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>
