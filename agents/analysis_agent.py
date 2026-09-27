@@ -287,7 +287,7 @@ def main():
     app = Starlette(routes=routes)
 
     print("Starting Analysis Agent on port 8003...")
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=1000)
 
 
 if __name__ == "__main__":
