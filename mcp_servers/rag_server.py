@@ -16,7 +16,7 @@ load_dotenv()
 # This is YOUR custom MCP server — it exposes your RAG pipeline
 # as a standard MCP interface that any MCP client can connect to:
 # your Document Agent, Claude Desktop, Cursor, ChatGPT, etc.
-mcp = FastMCP("RAG Document Server", host="127.0.0.1", port=8004)
+mcp = FastMCP("RAG Document Server", host="0.0.0.0", port=8004)
 
 
 @mcp.tool()

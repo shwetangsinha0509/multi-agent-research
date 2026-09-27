@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-RAG_MCP_URL = "http://127.0.0.1:8004/mcp"
+RAG_MCP_URL = os.getenv("RAG_MCP_URL", "http://127.0.0.1:8004/mcp")
 
 
 # ─── Agent Executor ───────────────────────────────────────────────────────────
@@ -118,7 +118,7 @@ def main():
     app = Starlette(routes=routes)
 
     print("Starting Document Agent on port 8002...")
-    uvicorn.run(app, host="127.0.0.1", port=8002)
+    uvicorn.run(app, host="0.0.0.0", port=8002)
 
 
 if __name__ == "__main__":

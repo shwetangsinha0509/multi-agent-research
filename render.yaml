@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: rag-mcp-server
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python mcp_servers/rag_server.py
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+
+  - type: web
+    name: document-agent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python agents/document_agent.py
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: RAG_MCP_URL
+        sync: false
+
+  - type: web
+    name: web-search-agent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python agents/web_search_agent.py
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+
+  - type: web
+    name: analysis-agent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python agents/analysis_agent.py
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+
+  - type: web
+    name: multi-agent-research-main
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: WEB_AGENT_URL
+        sync: false
+      - key: DOC_AGENT_URL
+        sync: false
+      - key: ANALYSIS_AGENT_URL
+        sync: false
