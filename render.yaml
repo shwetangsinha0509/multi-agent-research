@@ -14,6 +14,7 @@ services:
   - type: web
     name: document-agent
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python agents/document_agent.py
     envVars:
@@ -25,6 +26,7 @@ services:
   - type: web
     name: web-search-agent
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python agents/web_search_agent.py
     envVars:
@@ -36,6 +38,7 @@ services:
   - type: web
     name: analysis-agent
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python agents/analysis_agent.py
     envVars:
@@ -45,8 +48,9 @@ services:
   - type: web
     name: multi-agent-research-main
     runtime: python
+    plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 8000
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
     envVars:
       - key: GROQ_API_KEY
         sync: false
