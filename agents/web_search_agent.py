@@ -122,7 +122,7 @@ def main():
     app = Starlette(routes=routes)
 
     print("Starting Web Search Agent on port 8001...")
-    uvicorn.run(app, host="0.0.0.0", port=1000)
+    uvicorn.run(app, host="0.0.0.0", port=10000)
 
 if __name__ == "__main__":
     main()

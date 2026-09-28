@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp = FastMCP("RAG Document Server", host="0.0.0.0", port=1000)
+mcp = FastMCP("RAG Document Server", host="0.0.0.0", port=10000)
 
 
 @mcp.tool()

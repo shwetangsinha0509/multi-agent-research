@@ -118,7 +118,7 @@ def main():
     app = Starlette(routes=routes)
 
     print("Starting Document Agent on port 8002...")
-    uvicorn.run(app, host="0.0.0.0", port=1000)
+    uvicorn.run(app, host="0.0.0.0", port=10000)
 
 
 if __name__ == "__main__":
