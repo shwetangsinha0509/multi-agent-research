@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 from dotenv import load_dotenv
 
 # NOTE: RAG functionality (sentence-transformers, chromadb) is disabled in cloud deployment
@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp = FastMCP("RAG Document Server", host="0.0.0.0", port=10000)
+mcp = FastMCP("RAG Document Server")
 
 
 @mcp.tool()
@@ -92,5 +92,5 @@ def list_collections() -> str:
 
 
 if __name__ == "__main__":
-    print("Starting RAG MCP Server on port 8004...")
-    mcp.run(transport="streamable-http")
+    print("Starting RAG MCP Server on port 10000...")
+    mcp.run(transport="streamable-http", host="0.0.0.0", port=10000)
