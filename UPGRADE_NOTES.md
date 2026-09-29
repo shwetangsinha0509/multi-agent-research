@@ -72,3 +72,12 @@ port strategy (all services use port 10000 per Render's requirement).
 
 **Workaround for local testing:** Run each agent in isolation, or override the port
 with an env var before starting each one.
+
+## Files changed in this project
+
+- `mcp_servers/rag_server.py` — fixed Breaking Changes 1 and 2
+- `requirements.txt` — updated fastmcp and fastmcp-slim to 4.0.10
+
+## Upstream issue filed
+
+https://github.com/PrefectHQ/fastmcp/issues/5353
